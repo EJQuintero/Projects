@@ -1,0 +1,77 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+import seaborn as seabornInstance
+import random as r
+from statsmodels.formula.api import ols
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn import metrics
+
+#defining a list of accounts and the number of followers
+followers = {'nasa':66936201,'earthpix':19334843,'wonderful_places':14932207,'discovery':13958459,'wildlifeplanet':4221697,'world_wildlife':3634262,'cnn':15079711,'bbcnews':18128305,'joelsartore':1534152,
+             'bbcearth':8292337,'travelandleisure':5872558,'animalplanet':4106594,'brianskerry':955904,'cntraveler':2812247,'coryrichards':1037562,'stevewinterphoto':787685,'passionpassport':1280846,
+             'willbl':605241,'bbc_travel':1663292,'travelchannel':1877912,'davidlloyd':207658,'africanwildlifefoundation':538533,'oceanconservancy':378602,'christianziegler':134998,'newscientist':397361,
+             'margotraggettphotography':74955,'richardpetersphoto':28315,'stevenchikosi':77465,'natgeo':166854447}
+
+#excel files containing our data
+xlsx_files = ['natgeo.xlsx','africanwildlifefoundation.xlsx','animalplanet.xlsx','bbc_travel.xlsx','bbcearth.xlsx','bbcnews.xlsx','brianskerry.xlsx','christianziegler.xlsx','cnn.xlsx','cntraveler.xlsx',
+              'coryrichards.xlsx','davidlloyd.xlsx','discovery.xlsx','earthpix.xlsx','joelsartore.xlsx','margotraggettphotography.xlsx','nasa.xlsx','newscientist.xlsx','oceanconservancy.xlsx',
+              'passionpassport.xlsx','richardpetersphoto.xlsx','stevenchikosi.xlsx','stevewinterphoto.xlsx','travelandleisure.xlsx','travelchannel.xlsx','willbl.xlsx','wonderful_places.xlsx','world_wildlife.xlsx']
+
+#merging all excel files into a large dataset
+dataset = []
+i = 0
+while i < len(xlsx_files):
+    data = pd.read_excel('https://github.com/ReZarrected/DESC/blob/main/'+xlsx_files[i]+'?raw=true')
+    dataset.append(data)
+    i+=1
+dataset = pd.concat(dataset,ignore_index=True)
+
+dataset.columns = dataset.columns.str.replace(' ', '_')
+
+engagement_column = []
+for row in dataset.itertuples():
+  engagement = 100*((row.Likes + row.Comments)/followers[row.IG_Account])
+  engagement_column.append(engagement)
+
+dataset['Engagement'] = engagement_column
+
+dataset.head()
+
+# EDA
+
+dataset.describe()F
+
+'''Hypothesis definition
+Null hypothesis: there is no difference in the average engagement rate percentage between posts with hashtags and posts without hashtags.
+
+Alternative hypothesis: there is an statistically significance difference in the average engagement rate percentage between post with hastags and those without hashtags.
+
+I will conduct an one way ANOVA (Analysis of Variance) Test to test our hypothesis. The ANOVA Test will let me know if the differences in average occur due to random changes in data or if its due to statistically significan variations.
+
+I want to find the hashtags that generate the most likes and comments. So, I'll create a new variable (dataset2) to filter out the rows with NaN or null "Text / Caption".'''
+
+dataset2 = dataset.dropna(subset = ['Text_/_Caption'], inplace = False)
+dataset2.head()
+
+# Now, I want to separate the rows that contain hashtags and those that don't. I will create a dummyvariable ('hashtag') to identify whether the post contains hashtag or not.
+
+hashtag = dataset2[dataset2['Text_/_Caption'].str.contains("#")]
+hashtag['Hashtag'] = 1
+print(len(hashtag))
+
+no_hashtag = dataset2[dataset2['Text_/_Caption'].str.contains("#") == False]
+no_hashtag['Hashtag'] = 0
+print(len(no_hashtag))
+
+A new variable 'frame' is created to hold all instances, with and without hashtags, in a single dataframe.
+
+frames = [hashtag, no_hashtag]
+frame = pd.concat(frames)
+len(frame)
+
+frame.boxplot(column='Engagement', by= 'Hashtag')
+
+
